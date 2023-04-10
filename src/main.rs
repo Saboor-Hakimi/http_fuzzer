@@ -1,4 +1,7 @@
 // loades user arguments so import it
+// import request to make requests
+
+use reqwest::Error;
 use std::env;
 
 fn main() {
@@ -20,4 +23,21 @@ fn main() {
     // print the url and wordlist
     println!("URL: {}", url);
     println!("Wordlist: {}", wordlist);
+}
+
+// function to check if the url is valid it returns a 200 status code
+async fn check_url(url: &str) -> bool {
+    // create a new request
+    let response = reqwest::get("https://api.example.com/data")
+        .await?
+        .text()
+        .await?;
+
+    // check if the status code is 200
+    if response.status() == 200 {
+        return true;
+    }
+
+    return false
+
 }
