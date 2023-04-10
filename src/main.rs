@@ -1,7 +1,4 @@
-// loades user arguments so import it
-// import request to make requests
-
-use reqwest::Error;
+use curl::easy::Easy;
 use std::env;
 
 fn main() {
@@ -23,21 +20,45 @@ fn main() {
     // print the url and wordlist
     println!("URL: {}", url);
     println!("Wordlist: {}", wordlist);
+
+    let result: bool = check_url(url.as_str());
+    if result {
+        println!("URL is valid");
+    } else {
+        println!("URL is invalid");
+        return;
+    }
+
+    // read the wordlist
+    let words = std::fs::read_to_string(wordlist).unwrap();
+
+    // split the wordlist into a vector
+    let words: Vec<&str> = words.split_whitespace().collect();
+
+    println!("{} words loaded", words.len());
+
+    // loop through the words and check if the url is valid
+    for word in words {
+        let new_url = format!("{}/{}", url, word);
+        let result: bool = check_url(new_url.as_str());
+        if result {
+            println!("{} 200 OK", new_url);
+        } else {
+            println!("{} 404 Not Found", new_url);
+        }
+    }
+
+    println!("Done");
 }
 
 // function to check if the url is valid it returns a 200 status code
-async fn check_url(url: &str) -> bool {
-    // create a new request
-    let response = reqwest::get("https://api.example.com/data")
-        .await?
-        .text()
-        .await?;
-
-    // check if the status code is 200
-    if response.status() == 200 {
+fn check_url(url: &str) -> bool {
+    let mut easy = Easy::new();
+    easy.url(url).unwrap();
+    easy.perform().unwrap();
+    let code = easy.response_code().unwrap();
+    if code == 200 {
         return true;
     }
-
-    return false
-
+    return false;
 }
